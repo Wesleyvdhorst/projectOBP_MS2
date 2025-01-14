@@ -2,22 +2,23 @@ import pulp
 import random
 import pandas as pd
 import matplotlib.pyplot as plt
+import time  # For timing the execution
 
 # --------------------------
 # 1. Generate Fake Data
 # --------------------------
 random.seed(43)
 
-J = 5  # Number of jobs
+J = 9  # Number of jobs
 M = 3  # Number of machines
 
 jobs = list(range(J))
 machines = list(range(M))
 
 # Generate random release times, due dates, weights, and processing times
-release_times = {j: random.randint(0, 5) for j in jobs}
-due_dates = {j: random.randint(10, 20) for j in jobs}
-weights = {j: random.randint(1, 5) for j in jobs}
+release_times = {j: random.randint(0, 8) for j in jobs}
+due_dates = {j: random.randint(8, 20) for j in jobs}
+weights = {j: random.randint(1, 6) for j in jobs}
 processing_times = {(j, m): random.randint(2, 6) for j in jobs for m in machines}
 
 # Large M constant
@@ -26,6 +27,8 @@ BIG_M = 1000
 # --------------------------
 # 2. Define the ILP Model
 # --------------------------
+start_time = time.time()  # Start timing
+
 model = pulp.LpProblem("Job_Scheduling", pulp.LpMinimize)
 
 # Decision Variables
@@ -61,8 +64,12 @@ for j in jobs:
 # --------------------------
 # 3. Solve the Model
 # --------------------------
+print(f"Starting to solve the model at {time.ctime()}")  # Print current time before solving
 solver = pulp.PULP_CBC_CMD(msg=False)
 model.solve(solver)
+
+solve_time = time.time() - start_time  # Time taken to solve the model
+print(f"Model solved in {solve_time:.2f} seconds at {time.ctime()}")  # Print how long solving took
 
 # --------------------------
 # 4. Print Results
@@ -91,6 +98,7 @@ print(schedule_df)
 # --------------------------
 # 6. Create a Gantt Chart Visualization
 # --------------------------
+print(f"Starting to create Gantt chart at {time.ctime()}")  # Print time before plotting
 
 # Plotting the schedule on a Gantt chart style graph
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -116,6 +124,9 @@ ax.legend(handles[:len(jobs)], labels[:len(jobs)], title="Jobs")
 # Save the plot as an image
 plt.tight_layout()
 plt.savefig('job_scheduling_gantt_chart_no_overlap.png')
+
+plot_time = time.time() - start_time  # Time taken for plotting
+print(f"Gantt chart created in {plot_time:.2f} seconds at {time.ctime()}")  # Print how long plotting took
 
 # Show the plot
 plt.show()
