@@ -60,8 +60,6 @@
             margin-top: 20px;
         }
         .card {
-            flex: 1;
-            min-width: 300px;
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -112,6 +110,45 @@
         label {
             cursor: pointer;
         }
+
+        /* Layout Adjustments */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        /* Adjust the sizes */
+        .card.chart-card {
+            flex: 3;
+            min-width: 600px;
+        }
+        .card.stats-card {
+            flex: 2;
+            min-width: 300px;
+        }
+        .card.table-card {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        /* Placeholder table style */
+        .placeholder-table {
+            width: 100%;
+            border: 1px dashed #ccc;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .card.chart-card {
+                min-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -137,8 +174,56 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Task Table Card -->
-            <div class="card">
+            <!-- Placeholder Table Card -->
+            <div class="card table-card">
+                <h3>Job Data Placeholder</h3>
+                <div class="placeholder-table">
+                    <p>Placeholder for job data table. Add your data here.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Release Time</th>
+                                <th>Processing Time</th>
+                                <th>Machine</th>
+                                <!-- Add more columns as needed -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>10:00</td>
+                                <td>30 mins</td>
+                                <td>Machine 1</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>10:30</td>
+                                <td>45 mins</td>
+                                <td>Machine 2</td>
+                            </tr>
+                            <!-- Additional rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Schedule Visualization Card (Gantt Chart) -->
+            <div class="card chart-card">
+                <h3>Schedule Visualization</h3>
+                {% if img_buf %}
+                <div class="chart">
+                    <img src="data:image/png;base64,{{ img_buf }}" alt="Schedule Chart" />
+                </div>
+                {% else %}
+                <div class="chart">
+                    <p>No visualization available. Please generate the schedule.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Task Details Card (Stats) -->
+            <div class="card stats-card">
                 <h3>Task Details</h3>
                 {% if stats %}
                 <table>
@@ -201,24 +286,12 @@
                 <p>No statistics available. Please upload or generate data.</p>
                 {% endif %}
             </div>
+        </div>
 
-            <!-- Visualization -->
+        <!-- Additional Plots Section -->
+        <div class="main-content">
             <div class="card">
-                <h3>Schedule Visualization</h3>
-                {% if img_buf %}
-                <div class="chart">
-                    <img src="data:image/png;base64,{{ img_buf }}" alt="Schedule Chart" />
-                </div>
-                {% else %}
-                <div class="chart">
-                    <p>No visualization available. Please generate the schedule.</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Plots Section -->
-            <div class="card">
-                <h3>Plots</h3>
+                <h3>Additional Plots</h3>
                 <div class="chart">
                     <h4>Machine Utilization</h4>
                     {% if plots.machine_utilization %}
@@ -250,7 +323,6 @@
 
         <!-- Buttons -->
         <div class="buttons">
-            <!-- Hidden File Input -->
             <input type="file" id="fileUpload" name="file" />
             <label for="fileUpload" class="button upload-button">Upload Excel</label>
             <button class="button export-button">Export Schedule</button>
