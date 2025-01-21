@@ -9,7 +9,6 @@ app = Flask(__name__)
 
 REQUIRED_COLUMNS = ['Job', 'Machine', 'Processing Time', 'Release Time', 'Due Date', 'Weight']
 
-
 @app.route('/')
 def landing_page():
     """Landing page to choose between file upload or generated data."""

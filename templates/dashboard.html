@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Machine Scheduling Optimizer</title>
+    <title>Machine Scheduling Optimizer Dashboard</title>
     <style>
         /* General Styles */
         body {
@@ -31,15 +31,27 @@
             margin: 0;
             font-size: 24px;
         }
-        .error-message {
-            background: #f8d7da; /* Light red background */
-            color: #721c24; /* Dark red text */
-            border: 1px solid #f5c6cb;
+        .error-message, .success-message, .loading-message {
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
             text-align: center;
             font-size: 16px;
+        }
+        .error-message {
+            background: #f8d7da; /* Light red background */
+            color: #721c24; /* Dark red text */
+            border: 1px solid #f5c6cb;
+        }
+        .success-message {
+            background: #d4edda; /* Light green background */
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .loading-message {
+            background: #fff3cd; /* Light yellow background */
+            color: #856404;
+            border: 1px solid #ffeeba;
         }
         .main-content {
             display: flex;
@@ -58,16 +70,21 @@
         .card h3 {
             margin-top: 0;
         }
-        .chart {
-            height: 150px;
-            background: #dff3fa; /* Light gradient for charts */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f0f8ff; /* Light blue background */
+        }
+        .chart img {
+            max-width: 100%;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #5fa8d3;
-            font-size: 18px;
-            font-weight: bold;
         }
         .buttons {
             display: flex;
@@ -95,31 +112,13 @@
         label {
             cursor: pointer;
         }
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border: 1px solid #c3e6cb;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .loading-message {
-            background: #fff3cd;
-            color: #856404;
-            padding: 15px;
-            border: 1px solid #ffeeba;
-            border-radius: 5px;
-            margin-top: 20px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>Machine Scheduling Optimizer</h1>
+            <h1>Machine Scheduling Optimizer Dashboard</h1>
         </div>
 
         <!-- Error Message Section -->
@@ -141,45 +140,49 @@
             <!-- Task Table Card -->
             <div class="card">
                 <h3>Task Details</h3>
-                <table style="width: 100%; border-collapse: collapse;">
+                {% if stats %}
+                <table>
                     <thead>
                         <tr>
-                            <th style="border: 1px solid #ccc; padding: 8px;">Task Name</th>
-                            <th style="border: 1px solid #ccc; padding: 8px;">Due Time</th>
+                            <th>Metric</th>
+                            <th>Value</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style="border: 1px solid #ccc; padding: 8px;">Task A</td>
-                            <td style="border: 1px solid #ccc; padding: 8px;">11:00</td>
+                            <td>Total Jobs</td>
+                            <td>{{ stats.total_jobs }}</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ccc; padding: 8px;">Task B</td>
-                            <td style="border: 1px solid #ccc; padding: 8px;">12:00</td>
+                            <td>Total Processing Time</td>
+                            <td>{{ stats.total_processing_time }} minutes</td>
+                        </tr>
+                        <tr>
+                            <td>Average Processing Time</td>
+                            <td>{{ stats.average_processing_time }} minutes</td>
+                        </tr>
+                        <tr>
+                            <td>Objective Value</td>
+                            <td>{{ stats.objective_value }}</td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Statistics Card -->
-            <div class="card">
-                <h3>Statistics</h3>
-                {% if stats %}
-                    <p>Total Jobs: {{ stats.total_jobs }}</p>
-                    <p>Total Processing Time: {{ stats.total_processing_time }} minutes</p>
-                    <p>Average Processing Time: {{ stats.average_processing_time }} minutes</p>
                 {% else %}
-                    <p>No schedule data available. Please upload a file to generate the schedule.</p>
+                <p>No statistics available. Please upload or generate data.</p>
                 {% endif %}
             </div>
 
-            <!-- Timeline Visualization -->
+            <!-- Visualization -->
             <div class="card">
-                <h3>Schedule Timeline</h3>
+                <h3>Schedule Visualization</h3>
                 {% if img_buf %}
-                    <img src="data:image/png;base64,{{ img_buf | b64encode }}" alt="Schedule Chart" />
+                <div class="chart">
+                    <img src="data:image/png;base64,{{ img_buf }}" alt="Schedule Chart" />
+                </div>
                 {% else %}
-                    <div class="chart">Timeline Chart</div>
+                <div class="chart">
+                    <p>No visualization available. Please generate the schedule.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -188,11 +191,7 @@
         <div class="buttons">
             <!-- Hidden File Input -->
             <input type="file" id="fileUpload" name="file" />
-            
-            <!-- Upload Button -->
             <label for="fileUpload" class="button upload-button">Upload Excel</label>
-
-            <!-- Export Button -->
             <button class="button export-button">Export Schedule</button>
         </div>
     </div>
