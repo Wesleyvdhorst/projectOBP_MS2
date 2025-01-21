@@ -101,6 +101,9 @@
         .upload-button {
             background: #007bff; /* Blue button */
         }
+        .return-button {
+            background: #f44336; /* Red button */
+        }
         .export-button {
             background: #28a745; /* Green button */
         }
@@ -158,62 +161,14 @@
             <h1>Machine Scheduling Optimizer Dashboard</h1>
         </div>
 
-        <!-- Error Message Section -->
-        {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
-        {% endif %}
-
-        <!-- Success Message Section -->
-        {% if success %}
-        <div class="success-message">
-            {{ success }}
-        </div>
-        {% endif %}
-
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Placeholder Table Card -->
-            <div class="card table-card">
-                <h3>Job Data Placeholder</h3>
-                <div class="placeholder-table">
-                    <p>Placeholder for job data table. Add your data here.</p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Job ID</th>
-                                <th>Release Time</th>
-                                <th>Processing Time</th>
-                                <th>Machine</th>
-                                <!-- Add more columns as needed -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>10:00</td>
-                                <td>30 mins</td>
-                                <td>Machine 1</td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>10:30</td>
-                                <td>45 mins</td>
-                                <td>Machine 2</td>
-                            </tr>
-                            <!-- Additional rows will be added dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Schedule Visualization Card (Gantt Chart) -->
             <div class="card chart-card">
                 <h3>Schedule Visualization</h3>
                 {% if img_buf %}
                 <div class="chart">
-                    <img src="data:image/png;base64,{{ img_buf }}" alt="Schedule Chart" />
+                    <img src="data:image/png;base64,{{ img_buf }}" alt="Schedule Chart" id="scheduleImage" />
                 </div>
                 {% else %}
                 <div class="chart">
@@ -288,58 +243,33 @@
             </div>
         </div>
 
-        <!-- Additional Plots Section -->
-        <div class="main-content">
-            <div class="card">
-                <h3>Additional Plots</h3>
-                <div class="chart">
-                    <h4>Machine Utilization</h4>
-                    {% if plots.machine_utilization %}
-                    <img src="data:image/png;base64,{{ plots.machine_utilization }}" alt="Machine Utilization" />
-                    {% else %}
-                    <p>No machine utilization plot available.</p>
-                    {% endif %}
-                </div>
-
-                <div class="chart">
-                    <h4>Lateness Distribution</h4>
-                    {% if plots.lateness_distribution %}
-                    <img src="data:image/png;base64,{{ plots.lateness_distribution }}" alt="Lateness Distribution" />
-                    {% else %}
-                    <p>No lateness distribution plot available.</p>
-                    {% endif %}
-                </div>
-
-                <div class="chart">
-                    <h4>Idle Times</h4>
-                    {% if plots.idle_times %}
-                    <img src="data:image/png;base64,{{ plots.idle_times }}" alt="Idle Times" />
-                    {% else %}
-                    <p>No idle times plot available.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
         <!-- Buttons -->
         <div class="buttons">
-            <input type="file" id="fileUpload" name="file" />
-            <label for="fileUpload" class="button upload-button">Upload Excel</label>
-            <button class="button export-button">Export Schedule</button>
+            <button class="button return-button" id="returnButton">Return to Landing Page</button>
+            <button class="button export-button" id="exportScheduleButton">Export Schedule</button>
         </div>
     </div>
 
     <script>
-        // Display success message after file upload
-        document.getElementById('fileUpload').addEventListener('change', function () {
-            const successMessage = document.querySelector('.success-message');
-            if (successMessage) {
-                successMessage.style.display = 'none';
+        // Redirect to landing page when the "Return to Landing Page" button is clicked
+        document.getElementById('returnButton').addEventListener('click', function () {
+            window.location.href = '/';  // Assuming '/' is the landing page URL
+        });
+
+        // Export the PNG schedule when the Export button is clicked
+        document.getElementById('exportScheduleButton').addEventListener('click', function () {
+            const imgElement = document.getElementById('scheduleImage');
+            if (imgElement) {
+                const imageUrl = imgElement.src;
+                const link = document.createElement('a');
+                link.href = imageUrl; // Use the base64 image URL
+                link.download = 'schedule.png'; // Set the desired file name
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('No schedule visualization available for export.');
             }
-            const loadingMessage = document.createElement('div');
-            loadingMessage.className = 'loading-message';
-            loadingMessage.textContent = 'File uploaded successfully! Scheduling in progress...';
-            document.querySelector('.container').appendChild(loadingMessage);
         });
     </script>
 </body>
