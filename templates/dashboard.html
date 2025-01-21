@@ -162,8 +162,38 @@
                             <td>{{ stats.average_processing_time }} minutes</td>
                         </tr>
                         <tr>
-                            <td>Objective Value</td>
+                            <td>Total Weighted Tardiness</td>
                             <td>{{ stats.objective_value }}</td>
+                        </tr>
+                        <tr>
+                            <td>Utilization Rates</td>
+                            <td>
+                                <ul>
+                                {% for machine, rate in stats.utilization_rates.items() %}
+                                    <li>Machine {{ machine }}: {{ rate }}%</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Lateness</td>
+                            <td>
+                                <ul>
+                                {% for job, late in stats.lateness.items() %}
+                                    <li>Job {{ job }}: {{ late }} minutes</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Idle Times</td>
+                            <td>
+                                <ul>
+                                {% for machine, idle in stats.idle_times.items() %}
+                                    <li>Machine {{ machine }}: {{ idle }} minutes</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -184,6 +214,37 @@
                     <p>No visualization available. Please generate the schedule.</p>
                 </div>
                 {% endif %}
+            </div>
+
+            <!-- Plots Section -->
+            <div class="card">
+                <h3>Plots</h3>
+                <div class="chart">
+                    <h4>Machine Utilization</h4>
+                    {% if plots.machine_utilization %}
+                    <img src="data:image/png;base64,{{ plots.machine_utilization }}" alt="Machine Utilization" />
+                    {% else %}
+                    <p>No machine utilization plot available.</p>
+                    {% endif %}
+                </div>
+
+                <div class="chart">
+                    <h4>Lateness Distribution</h4>
+                    {% if plots.lateness_distribution %}
+                    <img src="data:image/png;base64,{{ plots.lateness_distribution }}" alt="Lateness Distribution" />
+                    {% else %}
+                    <p>No lateness distribution plot available.</p>
+                    {% endif %}
+                </div>
+
+                <div class="chart">
+                    <h4>Idle Times</h4>
+                    {% if plots.idle_times %}
+                    <img src="data:image/png;base64,{{ plots.idle_times }}" alt="Idle Times" />
+                    {% else %}
+                    <p>No idle times plot available.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 

@@ -44,32 +44,15 @@
         .generate-button {
             background: #28a745; /* Green button */
         }
-        input[type="file"] {
-            display: none;
-        }
-        label {
-            display: block;
-            width: 80%;
-            margin: 10px auto;
-            padding: 15px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            background: #007bff; /* Blue button */
-            text-align: center;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Machine Scheduling Optimizer</h1>
-        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-            <label for="fileUpload">Upload Excel File</label>
-            <input type="file" id="fileUpload" name="file" onchange="this.form.submit()">
+        <form action="/upload_or_generate" method="POST">
+            <button type="submit" name="choice" value="upload" class="button upload-button">Upload Excel File</button>
+            <button type="submit" name="choice" value="generate" class="button generate-button">Generate Random Data</button>
         </form>
-        <a href="{{ url_for('generate_data') }}" class="button generate-button">Generate Random Data</a>
     </div>
 </body>
 </html>
