@@ -31,7 +31,7 @@ def generate_data_single_sheet(jobs_count, machines_count, seed=43):
     combined_df = pd.DataFrame(combined_data)
 
     # Write to Excel
-    output_path = 'XXX'
+    output_path = './excel.xlsx'
     combined_df.to_excel(output_path, sheet_name='Job Scheduling Data', index=False)
     print(f"Data has been generated and saved to '{output_path}'.")
 
