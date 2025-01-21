@@ -100,7 +100,7 @@ class ORToolsScheduler:
             return pd.DataFrame(schedule), solver.ObjectiveValue()
         else:
             raise ValueError("No solution found!")
-
+    
     def visualize_schedule(self, schedule_df):
         fig, ax = plt.subplots(figsize=(15, 8))
 
@@ -136,17 +136,19 @@ class ORToolsScheduler:
         ax.set_yticklabels([f'Machine {i}' for i in range(self.num_machines)])
         ax.grid(True, axis='x', linestyle='--', alpha=0.7)
 
+        # Set x-axis to start at 0
+        ax.set_xlim(left=0)
+
         # Add legend
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
         ax.legend(by_label.values(), by_label.keys(),
-                  title="Jobs",
-                  bbox_to_anchor=(1.05, 1),
-                  loc='upper left')
+                title="Jobs",
+                bbox_to_anchor=(1.05, 1),
+                loc='upper left')
 
         plt.tight_layout()
         return fig
-
 
 # Function to load the data from the Excel file
 def load_data_from_excel(excel_file):

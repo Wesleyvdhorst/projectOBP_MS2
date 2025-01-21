@@ -31,28 +31,6 @@
             margin: 0;
             font-size: 24px;
         }
-        .error-message, .success-message, .loading-message {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-        .error-message {
-            background: #f8d7da; /* Light red background */
-            color: #721c24; /* Dark red text */
-            border: 1px solid #f5c6cb;
-        }
-        .success-message {
-            background: #d4edda; /* Light green background */
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .loading-message {
-            background: #fff3cd; /* Light yellow background */
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
         .main-content {
             display: flex;
             gap: 20px;
@@ -107,50 +85,45 @@
         .export-button {
             background: #28a745; /* Green button */
         }
-        input[type="file"] {
-            display: none;
+        .job-info-table {
+            flex: 1;
+            min-width: 300px;
         }
-        label {
-            cursor: pointer;
-        }
-
-        /* Layout Adjustments */
-        .main-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        /* Adjust the sizes */
-        .card.chart-card {
-            flex: 3;
+        .schedule-visualization {
+            flex: 2;
             min-width: 600px;
         }
-        .card.stats-card {
-            flex: 2;
+        .stats-card {
+            flex: 1;
             min-width: 300px;
         }
-        .card.table-card {
-            flex: 2;
-            min-width: 300px;
-        }
-
-        /* Placeholder table style */
-        .placeholder-table {
+        .plot-grid {
+            margin-top: 20px;
             width: 100%;
-            border: 1px dashed #ccc;
-            text-align: center;
-            padding: 10px;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-            .card.chart-card {
-                min-width: 100%;
-            }
+        .plots-container {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .plot {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .plot h4 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .plot img {
+            max-width: 100%;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -163,8 +136,33 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Schedule Visualization Card (Gantt Chart) -->
-            <div class="card chart-card">
+            <!-- Job Information Table -->
+            <div class="card job-info-table">
+                <h3>Job Information</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Release Time</th>
+                            <th>Deadline</th>
+                            <th>Completion Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in stats.release_times.keys() %}
+                        <tr>
+                            <td>{{ job }}</td>
+                            <td>{{ stats.release_times[job] }}</td>
+                            <td>{{ stats.due_dates[job] }}</td>
+                            <td>{{ stats.completion_times[job] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Schedule Visualization -->
+            <div class="card schedule-visualization">
                 <h3>Schedule Visualization</h3>
                 {% if img_buf %}
                 <div class="chart">
@@ -239,6 +237,29 @@
                 </table>
                 {% else %}
                 <p>No statistics available. Please upload or generate data.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Plots Section -->
+        <div class="card plot-grid">
+            <h3>Additional Metrics</h3>
+            <div class="plots-container">
+                {% if plots %}
+                <div class="plot">
+                    <h4>Machine Utilization</h4>
+                    <img src="data:image/png;base64,{{ plots.machine_utilization }}" alt="Machine Utilization" />
+                </div>
+                <div class="plot">
+                    <h4>Lateness Distribution</h4>
+                    <img src="data:image/png;base64,{{ plots.lateness_distribution }}" alt="Lateness Distribution" />
+                </div>
+                <div class="plot">
+                    <h4>Idle Times</h4>
+                    <img src="data:image/png;base64,{{ plots.idle_times }}" alt="Idle Times" />
+                </div>
+                {% else %}
+                <p>No additional plots available. Please generate the schedule.</p>
                 {% endif %}
             </div>
         </div>

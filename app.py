@@ -157,7 +157,7 @@ def generate_plots(stats):
     # Lateness Distribution Plot
     lateness = stats['lateness']
     plt.figure(figsize=(8, 6))
-    plt.hist(list(lateness.values()), bins=range(0, max(lateness.values()) + 5, 5), color='salmon', edgecolor='black')
+    plt.hist(list(lateness.values()), bins=range(0, max(lateness.values()) + 5), color='salmon', edgecolor='black')
     plt.xlabel("Lateness (Minutes)")
     plt.ylabel("Number of Jobs")
     plt.title("Job Lateness Distribution")
@@ -184,60 +184,99 @@ def generate_plots(stats):
 
 
 def calculate_utilization(schedule_df, num_machines):
-    """Calculate machine utilization based on the completion time of the last job."""
-    
+    """Calculate machine utilization based on the actual working time of each machine."""
     utilization_rates = {}
-    total_time_per_machine = {m: 0 for m in range(num_machines)}
-    completion_times = {m: 0 for m in range(num_machines)}
+    total_processing_time_per_machine = {m: 0 for m in range(num_machines)}
+    start_times = {m: float('inf') for m in range(num_machines)}  # Track the earliest start time
+    end_times = {m: 0 for m in range(num_machines)}  # Track the latest end time
 
-    # Calculate the processing times for each machine and find the last completion time
     for _, row in schedule_df.iterrows():
         machine = row['Machine']
         processing_time = row['Processing Time']
         start_time = row['Release Time']
-        
-        # The completion time for the current job is the start time + processing time
-        completion_time = start_time + processing_time
-        completion_times[machine] = max(completion_times[machine], completion_time)
-        
-        # Sum up the processing times for each machine
-        total_time_per_machine[machine] += processing_time
+        end_time = start_time + processing_time
 
-    # The total available time is the completion time of the last job on the last machine
-    total_available_time = max(completion_times.values())
+        # Update total processing time for the machine
+        total_processing_time_per_machine[machine] += processing_time
 
-    # Calculate utilization rate for each machine based on actual usage
-    for machine, total_time in total_time_per_machine.items():
+        # Update the earliest start time and latest end time for the machine
+        start_times[machine] = min(start_times[machine], start_time)
+        end_times[machine] = max(end_times[machine], end_time)
+
+    # Calculate utilization for each machine
+    for machine in range(num_machines):
+        total_available_time = end_times[machine] - start_times[machine]
         if total_available_time > 0:
-            utilization_rates[machine] = (total_time / total_available_time) * 100
+            utilization = (total_processing_time_per_machine[machine] / total_available_time) * 100
+            utilization_rates[machine] = min(utilization, 100)  # Cap utilization at 100%
         else:
             utilization_rates[machine] = 0  # Avoid division by zero if no available time
-    
+
     return utilization_rates
 
 
-def calculate_idle_times(schedule_df, num_machines, total_available_time=100):
-    """Calculate idle times for each machine as the total available time minus total processing time."""
-    
-    # Initialize idle_times to assume all machines have full available time initially
-    idle_times = {m: total_available_time for m in range(num_machines)}
-    
-    # Initialize total processing time for each machine
-    total_time_per_machine = {m: 0 for m in range(num_machines)}
-    
-    # Sum up the processing time for each machine
+def calculate_idle_times(schedule_df, num_machines):
+    """Calculate idle times for each machine, including gaps between jobs and idle time before/after jobs."""
+    idle_times = {m: 0 for m in range(num_machines)}  # Initialize idle times to zero
+
+    # Group the schedule by machine and sort by start time
+    machine_schedules = {m: [] for m in range(num_machines)}
     for _, row in schedule_df.iterrows():
         machine = row['Machine']
-        processing_time = row['Processing Time']
-        total_time_per_machine[machine] += processing_time
-    
-    # Calculate idle times
-    for machine, total_time in total_time_per_machine.items():
-        # Idle time is the remaining time when the machine is not used
-        idle_times[machine] = max(0, total_available_time - total_time)  # Avoid negative idle time
-    
+        start_time = row['Release Time']
+        end_time = start_time + row['Processing Time']
+        machine_schedules[machine].append((start_time, end_time))
+
+    # Calculate idle time for each machine
+    for machine in range(num_machines):
+        schedule = machine_schedules[machine]
+        if not schedule:
+            # If no jobs are scheduled on this machine, idle time is zero
+            idle_times[machine] = 0
+            continue
+
+        # Sort the schedule by start time
+        schedule.sort()
+
+        # Calculate idle time before the first job
+        first_job_start = schedule[0][0]
+        idle_before_first_job = first_job_start
+        idle_times[machine] += idle_before_first_job
+
+        # Calculate idle time between jobs
+        for i in range(1, len(schedule)):
+            prev_job_end = schedule[i - 1][1]
+            current_job_start = schedule[i][0]
+            gap = current_job_start - prev_job_end
+            if gap > 0:
+                idle_times[machine] += gap
+
+        # Calculate idle time after the last job
+        last_job_end = schedule[-1][1]
+        total_end_time = max([end for _, end in schedule])  # Total end time of the system
+        idle_after_last_job = total_end_time - last_job_end
+        idle_times[machine] += idle_after_last_job
+
     return idle_times
 
+def calculate_lateness(schedule_df, due_dates):
+    """Calculate lateness for each job (only positive lateness)."""
+    lateness = {}
+    for job, due_date in due_dates.items():
+        job_schedule = schedule_df[schedule_df['Job'] == job]
+        completion_time = job_schedule['Release Time'].max() + job_schedule['Processing Time'].sum()
+        lateness[job] = max(0, completion_time - due_date)  # Only consider positive lateness
+    return lateness
+
+
+def calculate_completion_times(schedule_df, num_machines):
+    """Calculate the completion time for each job at the final machine."""
+    completion_times = {}
+    for job in schedule_df['Job'].unique():
+        job_schedule = schedule_df[schedule_df['Job'] == job]
+        completion_time = job_schedule['Release Time'].max() + job_schedule['Processing Time'].sum()
+        completion_times[job] = completion_time
+    return completion_times
 
 def run_scheduler(df):
     """Runs the scheduler and returns visualization and stats."""
@@ -253,12 +292,11 @@ def run_scheduler(df):
                 if not job_machine_data.empty:
                     processing_time = job_machine_data['Processing Time'].values[0]
                     job_data.append((machine, processing_time))
-            
             jobs_data.append(job_data)
 
-        weights = df.groupby('Job')['Weight'].first().values.tolist()
-        due_dates = df.groupby('Job')['Due Date'].first().values.tolist()
-        release_times = df.groupby('Job')['Release Time'].first().values.tolist()
+        weights = df.groupby('Job')['Weight'].first().to_dict()
+        due_dates = df.groupby('Job')['Due Date'].first().to_dict()
+        release_times = df.groupby('Job')['Release Time'].first().to_dict()
 
         scheduler = ORToolsScheduler(jobs_data, weights, due_dates, release_times, num_jobs, num_machines)
         schedule_df, objective_value = scheduler.solve()
@@ -276,25 +314,27 @@ def run_scheduler(df):
         # Calculate machine utilization rates
         utilization_rates = calculate_utilization(schedule_df, num_machines)
 
-        # Calculate lateness for each job (due date - completion time)
-        lateness = {}
-        for job in range(num_jobs):
-            job_schedule = schedule_df[schedule_df['Job'] == job]
-            completion_time = job_schedule['Release Time'].max() + job_schedule['Processing Time'].sum()
-            lateness[job] = completion_time - due_dates[job]
+        # Calculate lateness for each job
+        lateness = calculate_lateness(schedule_df, due_dates)
 
-        # Calculate idle times per machine (total available time - total processing time)
+        # Calculate idle times per machine
         idle_times = calculate_idle_times(schedule_df, num_machines)
-        
+
+        # Calculate completion times for each job
+        completion_times = calculate_completion_times(schedule_df, num_machines)
+
         # Prepare stats
         stats = {
             'total_jobs': num_jobs,
             'total_processing_time': df['Processing Time'].sum(),
             'average_processing_time': round(df['Processing Time'].mean(), 2),
             'objective_value': objective_value,
-            'utilization_rates': utilization_rates,  # Add utilization rates
-            'lateness': lateness,                    # Add lateness
-            'idle_times': idle_times                 # Add idle times
+            'utilization_rates': utilization_rates,
+            'lateness': lateness,
+            'idle_times': idle_times,
+            'completion_times': completion_times,  # Add completion times
+            'due_dates': due_dates,  # Add due dates
+            'release_times': release_times  # Add release times
         }
 
         # Generate plots
@@ -303,7 +343,6 @@ def run_scheduler(df):
         return img_buf, stats, plots, None
     except Exception as e:
         return None, None, None, str(e)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
