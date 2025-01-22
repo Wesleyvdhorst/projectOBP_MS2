@@ -1,6 +1,6 @@
 import random
 import base64
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import xlsxwriter
 import io
 from flask import send_file
@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
+app.secret_key = '123456789'  # Add this line after Flask initialization
 
 REQUIRED_COLUMNS = ['Job', 'Machine', 'Processing Time', 'Release Time', 'Due Date', 'Weight']
 
@@ -212,6 +213,86 @@ def download_excel():
         return jsonify({'error': str(e)}), 400
 
 
+@app.route('/update_schedule', methods=['POST'])
+def update_schedule():
+    """Handle updates to job information and recalculate the schedule."""
+    try:
+        # Extract updated job information from form
+        form_data = request.form
+        num_jobs = len([k for k in form_data.keys() if k.startswith('release_time_')])
+
+        # Get stored processing times and number of machines from session
+        processing_times = session.get('processing_times', {})
+        num_machines = session.get('num_machines')
+
+        if not processing_times or not num_machines:
+            raise ValueError("Processing times or number of machines not found in session")
+
+        # Create dictionaries for job parameters
+        release_times = {}
+        due_dates = {}
+        weights = {}
+
+        for job_id in range(num_jobs):
+            release_times[job_id] = int(form_data[f'release_time_{job_id}'])
+            due_dates[job_id] = int(form_data[f'due_date_{job_id}'])
+            weights[job_id] = int(form_data[f'weight_{job_id}'])
+
+        # Create a DataFrame with the updated job information
+        data = []
+        for j in range(num_jobs):
+            for m in range(num_machines):
+                key = str((j, m))
+                processing_time = processing_times.get(key, 5)  # Default to 5 if not found
+                data.append({
+                    'Job': j,
+                    'Machine': m,
+                    'Processing Time': processing_time,
+                    'Release Time': release_times[j],
+                    'Due Date': due_dates[j],
+                    'Weight': weights[j]
+                })
+
+        df = pd.DataFrame(data)
+
+        # Run the scheduler with updated data
+        img_buf, stats, plots, error = run_scheduler(df)
+        if error:
+            # On error, pass back the original form data as stats
+            error_stats = {
+                'release_times': release_times,
+                'due_dates': due_dates,
+                'weights': weights,
+                'completion_times': {j: 0 for j in range(num_jobs)}  # Dummy completion times
+            }
+            return render_template('dashboard.html',
+                                   stats=error_stats,
+                                   error=f"Scheduling error: {error}")
+
+        # Convert stats for JSON serialization
+        converted_stats = convert_stats_for_json(stats)
+
+        # Convert image buffer to base64
+        img_base64 = base64.b64encode(img_buf.getvalue()).decode('utf-8')
+
+        return render_template('dashboard.html',
+                               stats=converted_stats,
+                               img_buf=img_base64,
+                               plots=plots)
+
+    except Exception as e:
+        # Create minimal stats for template rendering on error
+        error_stats = {
+            'release_times': {},
+            'due_dates': {},
+            'weights': {},
+            'completion_times': {}
+        }
+        return render_template('dashboard.html',
+                               stats=error_stats,
+                               error=f"Error updating schedule: {str(e)}")
+
+
 def validate_file(request):
     """Validates the uploaded file."""
     if 'file' not in request.files:
@@ -350,9 +431,21 @@ def calculate_completion_times(schedule_df, num_machines):
     return completion_times
 
 
+def store_processing_times(df):
+    """Store processing times in session."""
+    processing_times = {}
+    for _, row in df.iterrows():
+        key = str((int(row['Job']), int(row['Machine'])))
+        processing_times[key] = int(row['Processing Time'])
+    session['processing_times'] = processing_times
+    session['num_machines'] = int(df['Machine'].nunique())
+
+
 def run_scheduler(df):
     """Runs the scheduler and returns visualization and stats."""
     try:
+        store_processing_times(df)
+
         num_jobs = df['Job'].nunique()
         num_machines = df['Machine'].nunique()
 
