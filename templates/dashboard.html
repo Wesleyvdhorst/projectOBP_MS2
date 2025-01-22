@@ -32,9 +32,9 @@
             font-size: 24px;
         }
         .main-content {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(auto, 450px) 1fr;
             gap: 20px;
-            flex-wrap: wrap;
             margin-top: 20px;
         }
         .card {
@@ -50,13 +50,15 @@
             width: 100%;
             border-collapse: collapse;
         }
+
         th, td {
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
         }
+
         th {
-            background: #f0f8ff; /* Light blue background */
+            background: #f0f8ff;
         }
         .chart img {
             max-width: 100%;
@@ -85,9 +87,22 @@
         .export-button {
             background: #28a745; /* Green button */
         }
-        .job-info-table {
-            flex: 1;
-            min-width: 300px;
+        .job-info-table table {
+            font-size: 14px;
+        }
+
+        .job-info-table th,
+        .job-info-table td {
+            padding: 4px;
+            text-align: center;
+        }
+
+        .job-info-table .editable-input {
+            width: 45px;
+            padding: 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
         }
         .schedule-visualization {
             flex: 2;
@@ -96,6 +111,7 @@
         .stats-card {
             flex: 1;
             min-width: 300px;
+            grid-column: 1 / -1;  /* Make it take full width */
         }
         .plot-grid {
             margin-top: 20px;
@@ -140,29 +156,82 @@
             <!-- Job Information Table -->
             <div class="card job-info-table">
                 <h3>Job Information</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Job ID</th>
-                            <th>Release Time</th>
-                            <th>Deadline</th>
-                            <th>Weight</th>
-                            <th>Completion Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for job in stats.release_times.keys() %}
-                        <tr>
-                            <td>{{ job }}</td>
-                            <td>{{ stats.release_times[job] }}</td>
-                            <td>{{ stats.due_dates[job] }}</td>
-                            <td>{{ stats.weights[job] }}</td>
-                            <td>{{ stats.completion_times[job] }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <form id="jobInfoForm" method="POST" action="/update_schedule">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Release Time</th>
+                                <th>Deadline</th>
+                                <th>Weight</th>
+                                <th>Completion Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in stats.release_times.keys() %}
+                            <tr>
+                                <td>{{ job }}</td>
+                                <td>
+                                    <input type="number"
+                                           name="release_time_{{ job }}"
+                                           value="{{ stats.release_times[job] }}"
+                                           min="0"
+                                           class="editable-input">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="due_date_{{ job }}"
+                                           value="{{ stats.due_dates[job] }}"
+                                           min="0"
+                                           class="editable-input">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="weight_{{ job }}"
+                                           value="{{ stats.weights[job] }}"
+                                           min="1"
+                                           class="editable-input">
+                                </td>
+                                <td>{{ stats.completion_times[job] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="submit" class="button submit-button" style="margin-top: 10px;">
+                        Update Schedule
+                    </button>
+                </form>
             </div>
+
+            <style>
+            .editable-input {
+                width: 50px;
+                padding: 2px 4px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                text-align: center;
+                font-size: 14px;
+            }
+
+            .editable-input:focus {
+                border-color: #007bff;
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            }
+
+            .submit-button {
+                background: #28a745;
+                color: white;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .submit-button:hover {
+                background: #218838;
+            }
+            </style>
 
             <!-- Schedule Visualization -->
             <div class="card schedule-visualization">
@@ -173,7 +242,7 @@
                 </div>
                 {% else %}
                 <div class="chart">
-                    <p>No visualization available. Please generate the schedule.</p>
+                    <p>Schedule infeasible. Please generate a new schedule.</p>
                 </div>
                 {% endif %}
             </div>
