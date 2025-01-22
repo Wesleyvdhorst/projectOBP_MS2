@@ -1,7 +1,10 @@
 import random
-import io
 import base64
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import xlsxwriter
+import io
+from flask import send_file
+import json
 from scheduler import ORToolsScheduler  # Assuming the class exists
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -93,6 +96,25 @@ def upload_file():
     return redirect(url_for('loading_screen', dataframe=df.to_json()))
 
 
+def convert_stats_for_json(stats):
+    """Convert numpy types to Python native types for JSON serialization."""
+    converted_stats = {}
+
+    for key, value in stats.items():
+        if isinstance(value, dict):
+            # Handle nested dictionaries (like utilization_rates, idle_times, etc.)
+            converted_stats[key] = {
+                str(k): float(v) if hasattr(v, 'dtype') else v
+                for k, v in value.items()
+            }
+        elif hasattr(value, 'dtype'):  # Check if it's a numpy type
+            converted_stats[key] = float(value) if 'float' in str(value.dtype) else int(value)
+        else:
+            converted_stats[key] = value
+
+    return converted_stats
+
+
 @app.route('/loading', methods=['GET'])
 def loading_screen():
     """Displays a loading screen and runs the scheduler."""
@@ -101,7 +123,8 @@ def loading_screen():
         return render_template('landing_page.html', error="No data passed.")
 
     try:
-        df = pd.read_json(df_json)
+        # Convert JSON string to StringIO object to avoid FutureWarning
+        df = pd.read_json(io.StringIO(df_json))
     except ValueError as e:
         return render_template('upload_page.html', error=f"Error parsing data: {e}")
 
@@ -110,9 +133,83 @@ def loading_screen():
     if error:
         return render_template('upload_page.html', error=error)
 
+    # Convert stats for JSON serialization
+    converted_stats = convert_stats_for_json(stats)
+
     # Convert image buffer to base64 for rendering in template
     img_base64 = base64.b64encode(img_buf.getvalue()).decode('utf-8')
-    return render_template('dashboard.html', stats=stats, img_buf=img_base64, plots=plots)
+    return render_template('dashboard.html', stats=converted_stats, img_buf=img_base64, plots=plots)
+
+
+@app.route('/download_excel', methods=['POST'])
+def download_excel():
+    """Handle the Excel download request with all scheduling data."""
+    try:
+        # Get stats data from the form
+        stats = json.loads(request.form.get('stats_data'))
+
+        # Create an in-memory output file
+        output = io.BytesIO()
+
+        # Create the Excel workbook and add worksheets
+        workbook = xlsxwriter.Workbook(output)
+
+        # Sheet 1: Job Details
+        job_sheet = workbook.add_worksheet("Job Details")
+        # Write headers
+        headers = ['Job ID', 'Release Time', 'Due Date', 'Weight', 'Completion Time', 'Lateness', 'Weighted Tardiness']
+        for col, header in enumerate(headers):
+            job_sheet.write(0, col, header)
+
+        # Write job data
+        for row, job_id in enumerate(stats['release_times'].keys(), 1):
+            job_sheet.write(row, 0, int(job_id))
+            job_sheet.write(row, 1, stats['release_times'][job_id])
+            job_sheet.write(row, 2, stats['due_dates'][job_id])
+            job_sheet.write(row, 3, stats['weights'][job_id])
+            job_sheet.write(row, 4, stats['completion_times'][job_id])
+            job_sheet.write(row, 5, stats['lateness'][job_id])
+            job_sheet.write(row, 6, stats['lateness'][job_id] * stats['weights'][job_id])
+
+        # Sheet 2: Machine Statistics
+        machine_sheet = workbook.add_worksheet("Machine Statistics")
+        machine_headers = ['Machine ID', 'Utilization Rate (%)', 'Idle Time (minutes)']
+        for col, header in enumerate(machine_headers):
+            machine_sheet.write(0, col, header)
+
+        for row, machine_id in enumerate(stats['utilization_rates'].keys(), 1):
+            machine_sheet.write(row, 0, int(machine_id))
+            machine_sheet.write(row, 1, stats['utilization_rates'][machine_id])
+            machine_sheet.write(row, 2, stats['idle_times'][machine_id])
+
+        # Sheet 3: Overall Statistics
+        stats_sheet = workbook.add_worksheet("Overall Statistics")
+        overall_stats = [
+            ('Total Jobs', stats['total_jobs']),
+            ('Total Processing Time', stats['total_processing_time']),
+            ('Average Processing Time', stats['average_processing_time']),
+            ('Total Weighted Tardiness', stats['objective_value'])
+        ]
+
+        for row, (metric, value) in enumerate(overall_stats):
+            stats_sheet.write(row, 0, metric)
+            stats_sheet.write(row, 1, value)
+
+        # Close the workbook
+        workbook.close()
+
+        # Seek to the beginning of the output
+        output.seek(0)
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='schedule_full_data.xlsx'
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 def validate_file(request):
@@ -309,7 +406,8 @@ def run_scheduler(df):
             'idle_times': idle_times,
             'completion_times': completion_times,
             'due_dates': due_dates,
-            'release_times': release_times
+            'release_times': release_times,
+            'weights': weights,
         }
 
         # Generate plots

@@ -137,6 +137,7 @@
         <!-- Main Content -->
         <div class="main-content">
             <!-- Job Information Table -->
+            <!-- Job Information Table -->
             <div class="card job-info-table">
                 <h3>Job Information</h3>
                 <table>
@@ -145,6 +146,7 @@
                             <th>Job ID</th>
                             <th>Release Time</th>
                             <th>Deadline</th>
+                            <th>Weight</th>
                             <th>Completion Time</th>
                         </tr>
                     </thead>
@@ -154,6 +156,7 @@
                             <td>{{ job }}</td>
                             <td>{{ stats.release_times[job] }}</td>
                             <td>{{ stats.due_dates[job] }}</td>
+                            <td>{{ stats.weights[job] }}</td>
                             <td>{{ stats.completion_times[job] }}</td>
                         </tr>
                         {% endfor %}
@@ -267,30 +270,50 @@
         <!-- Buttons -->
         <div class="buttons">
             <button class="button return-button" id="returnButton">Return to Landing Page</button>
-            <button class="button export-button" id="exportScheduleButton">Export Schedule</button>
+            <button class="button export-button" id="exportImageButton">Export Schedule Image</button>
+            <button class="button export-button" id="exportExcelButton" style="background: #218838;">Export Full Data (Excel)</button>
         </div>
     </div>
 
     <script>
-        // Redirect to landing page when the "Return to Landing Page" button is clicked
+        // Return to landing page
         document.getElementById('returnButton').addEventListener('click', function () {
-            window.location.href = '/';  // Assuming '/' is the landing page URL
+            window.location.href = '/';
         });
 
-        // Export the PNG schedule when the Export button is clicked
-        document.getElementById('exportScheduleButton').addEventListener('click', function () {
+        // Export schedule image
+        document.getElementById('exportImageButton').addEventListener('click', function () {
             const imgElement = document.getElementById('scheduleImage');
             if (imgElement) {
                 const imageUrl = imgElement.src;
                 const link = document.createElement('a');
-                link.href = imageUrl; // Use the base64 image URL
-                link.download = 'schedule.png'; // Set the desired file name
+                link.href = imageUrl;
+                link.download = 'schedule.png';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             } else {
                 alert('No schedule visualization available for export.');
             }
+        });
+
+        // Export full data to Excel
+        document.getElementById('exportExcelButton').addEventListener('click', function () {
+            // Create a form to send the current data
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/download_excel';
+
+            // Add current stats and schedule data as hidden fields
+            const statsInput = document.createElement('input');
+            statsInput.type = 'hidden';
+            statsInput.name = 'stats_data';
+            statsInput.value = JSON.stringify({{ stats|tojson|safe }});
+            form.appendChild(statsInput);
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
         });
     </script>
 </body>
