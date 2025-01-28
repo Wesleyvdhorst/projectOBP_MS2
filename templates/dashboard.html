@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Machine Scheduling Optimizer Dashboard</title>
     <style>
+        
+    /* AI Insights Section */
+    .ai-insights-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        text-align: left;
+    }
+
+    .ai-insights-section h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .ai-insights-section p {
+        color: #555;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-top: 10px;
+    }
+
+    .ai-insights-section .no-insights {
+        color: #999;
+        font-style: italic;
+        text-align: center;
+    }
+
+    .ai-insights-section ul {
+    padding-left: 20px; /* Indent the list */
+    list-style-type: disc; /* Use bullet points */
+    color: #333; /* Text color for readability */
+    font-size: 16px; /* Adjust the text size */
+    line-height: 1.6; /* Increase line height for better spacing */
+    }
+    .ai-insights-section li {
+    margin-bottom: 15px; /* Add space between list items */
+    }
+
+
         /* General Styles */
         body {
             font-family: Arial, sans-serif;
@@ -336,6 +380,19 @@
             </div>
         </div>
 
+        <div class="card ai-insights-section">
+            <h3>AI Insights</h3>
+            {% if ai_comments %}
+            <ul>
+                {% for comment in ai_comments %}
+                <li>{{ comment }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-insights">No insights available at the moment. Please check your data or try again later.</p>
+            {% endif %}
+        </div>
+        
         <!-- Buttons -->
         <div class="buttons">
             <button class="button return-button" id="returnButton">Return to Landing Page</button>
@@ -343,7 +400,8 @@
             <button class="button export-button" id="exportExcelButton" style="background: #218838;">Export Full Data (Excel)</button>
         </div>
     </div>
-
+    
+    
     <script>
         // Return to landing page
         document.getElementById('returnButton').addEventListener('click', function () {
