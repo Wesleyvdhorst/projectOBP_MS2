@@ -8,11 +8,47 @@ import json
 from scheduler import ORToolsScheduler  # Assuming the class exists
 import pandas as pd
 import matplotlib.pyplot as plt
+import openai
 
 app = Flask(__name__)
 app.secret_key = '123456789'  # Add this line after Flask initialization
 
+openai.api_key = "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"
+
 REQUIRED_COLUMNS = ['Job', 'Machine', 'Processing Time', 'Release Time', 'Due Date', 'Weight']
+
+def generate_ai_comments(stats):
+    """
+    Generate AI comments based on the provided statistics using OpenAI API.
+    """
+    prompt = f"""
+    Here are the scheduling statistics:
+    - Total Jobs: {stats['total_jobs']}
+    - Total Processing Time: {stats['total_processing_time']}
+    - Average Processing Time: {stats['average_processing_time']}
+    - Total Weighted Tardiness: {stats['objective_value']}
+    - Machine Utilization Rates: {stats['utilization_rates']}
+    - Job Lateness: {stats['lateness']}
+    - Idle Times: {stats['idle_times']}
+
+    Provide an analysis highlighting potential bottlenecks, areas for improvement, and scheduling insights. 
+    Return the output as a cleanly formatted numbered list, with one clear insight per number.
+    """
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert scheduling assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.7,
+        )
+        # Extract and split the response into a clean list
+        raw_response = response['choices'][0]['message']['content'].strip()
+        return [line.strip() for line in raw_response.split('\n') if line.strip()]
+    except Exception as e:
+        return [f"Error generating AI comments: {e}"]
 
 @app.route('/')
 def landing_page():
@@ -124,22 +160,27 @@ def loading_screen():
         return render_template('landing_page.html', error="No data passed.")
 
     try:
-        # Convert JSON string to StringIO object to avoid FutureWarning
         df = pd.read_json(io.StringIO(df_json))
     except ValueError as e:
         return render_template('upload_page.html', error=f"Error parsing data: {e}")
 
-    # Run the scheduler
     img_buf, stats, plots, error = run_scheduler(df)
     if error:
         return render_template('upload_page.html', error=error)
 
-    # Convert stats for JSON serialization
     converted_stats = convert_stats_for_json(stats)
 
-    # Convert image buffer to base64 for rendering in template
+    # Generate AI comments
+    ai_comments = generate_ai_comments(converted_stats)
+
     img_base64 = base64.b64encode(img_buf.getvalue()).decode('utf-8')
-    return render_template('dashboard.html', stats=converted_stats, img_buf=img_base64, plots=plots)
+    return render_template(
+        'dashboard.html',
+        stats=converted_stats,
+        img_buf=img_base64,
+        plots=plots,
+        ai_comments=ai_comments
+    )
 
 
 @app.route('/download_excel', methods=['POST'])
