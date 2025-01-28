@@ -261,34 +261,39 @@ def update_schedule():
         # Extract updated job information from form
         form_data = request.form
         num_jobs = len([k for k in form_data.keys() if k.startswith('release_time_')])
-
-        # Get stored processing times and number of machines from session
-        processing_times = session.get('processing_times', {})
         num_machines = session.get('num_machines')
-
-        if not processing_times or not num_machines:
-            raise ValueError("Processing times or number of machines not found in session")
 
         # Create dictionaries for job parameters
         release_times = {}
         due_dates = {}
         weights = {}
 
+        # Create a dictionary to store processing times for each job-machine combination
+        processing_times = {}
+
         for job_id in range(num_jobs):
             release_times[job_id] = int(form_data[f'release_time_{job_id}'])
             due_dates[job_id] = int(form_data[f'due_date_{job_id}'])
             weights[job_id] = int(form_data[f'weight_{job_id}'])
 
+            # Get processing times for each machine from hidden inputs
+            for machine_id in range(num_machines):
+                proc_time_key = f'processing_time_{job_id}_{machine_id}'
+                if proc_time_key in form_data:
+                    processing_times[(job_id, machine_id)] = int(form_data[proc_time_key])
+                else:
+                    # If not in form data, try to get from session
+                    session_key = str((job_id, machine_id))
+                    processing_times[(job_id, machine_id)] = session.get('processing_times', {}).get(session_key, 5)
+
         # Create a DataFrame with the updated job information
         data = []
         for j in range(num_jobs):
             for m in range(num_machines):
-                key = str((j, m))
-                processing_time = processing_times.get(key, 5)  # Default to 5 if not found
                 data.append({
                     'Job': j,
                     'Machine': m,
-                    'Processing Time': processing_time,
+                    'Processing Time': processing_times[(j, m)],
                     'Release Time': release_times[j],
                     'Due Date': due_dates[j],
                     'Weight': weights[j]
@@ -299,15 +304,14 @@ def update_schedule():
         # Run the scheduler with updated data
         img_buf, stats, plots, error = run_scheduler(df)
         if error:
-            # On error, pass back the original form data as stats
-            error_stats = {
-                'release_times': release_times,
-                'due_dates': due_dates,
-                'weights': weights,
-                'completion_times': {j: 0 for j in range(num_jobs)}  # Dummy completion times
-            }
             return render_template('dashboard.html',
-                                   stats=error_stats,
+                                   stats={
+                                       'release_times': release_times,
+                                       'due_dates': due_dates,
+                                       'weights': weights,
+                                       'completion_times': {j: 0 for j in range(num_jobs)},
+                                       'num_machines': num_machines
+                                   },
                                    error=f"Scheduling error: {error}")
 
         # Convert stats for JSON serialization
@@ -322,15 +326,14 @@ def update_schedule():
                                plots=plots)
 
     except Exception as e:
-        # Create minimal stats for template rendering on error
-        error_stats = {
-            'release_times': {},
-            'due_dates': {},
-            'weights': {},
-            'completion_times': {}
-        }
         return render_template('dashboard.html',
-                               stats=error_stats,
+                               stats={
+                                   'release_times': {},
+                                   'due_dates': {},
+                                   'weights': {},
+                                   'completion_times': {},
+                                   'num_machines': num_machines
+                               },
                                error=f"Error updating schedule: {str(e)}")
 
 
@@ -542,6 +545,7 @@ def run_scheduler(df):
             'due_dates': due_dates,
             'release_times': release_times,
             'weights': weights,
+            'num_machines': num_machines
         }
 
         # Generate plots

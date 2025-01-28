@@ -246,49 +246,49 @@
                     </button>
                 </form>
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <h4 style="margin: 0 0 10px 0; color: #333;">Add New Job</h4>
-                    <table style="width: 100%; margin-bottom: 10px;">
-                        <thead>
-                            <tr>
-                                <th>Release Time</th>
-                                <th>Deadline</th>
-                                <th>Weight</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <input type="number"
-                                           id="newReleaseTime"
-                                           min="0"
-                                           class="editable-input"
-                                           style="width: 90%;">
-                                </td>
-                                <td>
-                                    <input type="number"
-                                           id="newDeadline"
-                                           min="0"
-                                           class="editable-input"
-                                           style="width: 90%;">
-                                </td>
-                                <td>
-                                    <input type="number"
-                                           id="newWeight"
-                                           min="1"
-                                           class="editable-input"
-                                           style="width: 90%;">
-                                </td>
-                                <td>
-                                    <button onclick="addNewJob()"
-                                            class="button submit-button"
-                                            style="margin: 0; padding: 4px 12px; font-size: 14px;">
-                                        Add Job
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <h4 style="margin: 0 0 10px 0;">Add New Job</h4>
+                    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">Release Time</label>
+                            <input type="number"
+                                   id="newReleaseTime"
+                                   min="0"
+                                   class="editable-input">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">Deadline</label>
+                            <input type="number"
+                                   id="newDeadline"
+                                   min="0"
+                                   class="editable-input">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">Weight</label>
+                            <input type="number"
+                                   id="newWeight"
+                                   min="1"
+                                   class="editable-input">
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 5px;">Processing Times for Each Machine</label>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            {% for machine in range(stats.num_machines) %}
+                            <div>
+                                <label style="display: block; margin-bottom: 5px;">Machine {{ machine }}</label>
+                                <input type="number"
+                                       id="newProcessingTime_{{ machine }}"
+                                       min="1"
+                                       class="editable-input">
+                            </div>
+                            {% endfor %}
+                            <button onclick="addNewJob()"
+                                    class="button submit-button"
+                                    style="margin-left: auto; padding: 4px 12px; font-size: 14px;">
+                                Add Job
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -490,13 +490,21 @@
     </script>
     <script>
     function addNewJob() {
-        // Get the new job values
+        // Get the basic job values
         const releaseTime = document.getElementById('newReleaseTime').value;
         const deadline = document.getElementById('newDeadline').value;
         const weight = document.getElementById('newWeight').value;
 
-        // Validate inputs
-        if (!releaseTime || !deadline || !weight) {
+        // Get processing times for each machine
+        const processingTimes = [];
+        const numMachines = {{ stats.num_machines }};  // Get number of machines from stats
+        for (let i = 0; i < numMachines; i++) {
+            const procTime = document.getElementById(`newProcessingTime_${i}`).value;
+            processingTimes.push(procTime);
+        }
+
+        // Validate all inputs
+        if (!releaseTime || !deadline || !weight || processingTimes.some(time => !time)) {
             alert('Please fill in all fields');
             return;
         }
@@ -533,13 +541,25 @@
             <td>0</td>
         `;
 
+        // Add processing times as hidden inputs
+        processingTimes.forEach((time, machineIndex) => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `processing_time_${newJobId}_${machineIndex}`;
+            hiddenInput.value = time;
+            newRow.appendChild(hiddenInput);
+        });
+
         // Add the new row
         tbody.appendChild(newRow);
 
-        // Clear input fields
+        // Clear all input fields
         document.getElementById('newReleaseTime').value = '';
         document.getElementById('newDeadline').value = '';
         document.getElementById('newWeight').value = '';
+        processingTimes.forEach((_, i) => {
+            document.getElementById(`newProcessingTime_${i}`).value = '';
+        });
     }
     </script>
 </body>
