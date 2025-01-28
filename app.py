@@ -13,7 +13,7 @@ import openai
 app = Flask(__name__)
 app.secret_key = '123456789'  # Add this line after Flask initialization
 
-openai.api_key = "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"
+openai.api_key = "YOUR_API_KEY"
 
 REQUIRED_COLUMNS = ['Job', 'Machine', 'Processing Time', 'Release Time', 'Due Date', 'Weight']
 

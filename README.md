@@ -17,7 +17,7 @@ This repository contains a Flask-based web application that provides tools for s
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/<projectOBP_MS2>.git
+git clone https://github.com/<Wesleyvdhorst/projectOBP_MS2>.git
 cd <projectOBP_MS2>
 ```
 
