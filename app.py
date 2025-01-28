@@ -139,12 +139,12 @@ def convert_stats_for_json(stats):
 
     for key, value in stats.items():
         if isinstance(value, dict):
-            # Handle nested dictionaries (like utilization_rates, idle_times, etc.)
+            # Handle nested dictionaries
             converted_stats[key] = {
                 str(k): float(v) if hasattr(v, 'dtype') else v
                 for k, v in value.items()
             }
-        elif hasattr(value, 'dtype'):  # Check if it's a numpy type
+        elif hasattr(value, 'dtype'):  #check if it's a numpy type
             converted_stats[key] = float(value) if 'float' in str(value.dtype) else int(value)
         else:
             converted_stats[key] = value
@@ -412,7 +412,7 @@ def calculate_utilization(schedule_df, num_machines):
             utilization_rates[machine] = 0
             continue
 
-        # Calculate total active period (from first job start to last job end)
+        # calculate total active period
         active_period = machine_schedule['End Time'].max() - machine_schedule['Start Time'].min()
 
         # Calculate idle time (gaps between jobs)

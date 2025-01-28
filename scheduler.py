@@ -19,7 +19,7 @@ class ORToolsScheduler:
         # Create the model
         model = cp_model.CpModel()
 
-        # Define the horizon (upper bound for scheduling)
+        # Define upper bound for scheduling
         horizon = sum(task[1] for job in self.jobs_data for task in job) * 2
 
         # Create job intervals and variables
@@ -150,6 +150,7 @@ class ORToolsScheduler:
         plt.tight_layout()
         return fig
 
+
 # Function to load the data from the Excel file
 def load_data_from_excel(excel_file):
     # Read the Excel file
@@ -178,10 +179,9 @@ def load_data_from_excel(excel_file):
     return jobs_data, weights, due_dates, release_times, num_jobs, num_machines
 
 
-# Example usage for debugging without UI (File upload)
 if __name__ == "__main__":
     # Replace with your own Excel file path
-    excel_file = 'excel.xlsx'  # Change to your file path
+    excel_file = 'excel.xlsx'
 
     # Load data from Excel file
     try:

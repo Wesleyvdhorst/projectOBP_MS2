@@ -38,14 +38,14 @@
     }
 
     .ai-insights-section ul {
-    padding-left: 20px; /* Indent the list */
-    list-style-type: disc; /* Use bullet points */
-    color: #333; /* Text color for readability */
-    font-size: 16px; /* Adjust the text size */
-    line-height: 1.6; /* Increase line height for better spacing */
+    padding-left: 20px;
+    list-style-type: disc;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.6;
     }
     .ai-insights-section li {
-    margin-bottom: 15px; /* Add space between list items */
+    margin-bottom: 15px;
     }
 
 
@@ -54,7 +54,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: #e5f0f7; /* Light blue background */
+            background: #e5f0f7;
             color: #333;
         }
         .container {
@@ -123,13 +123,13 @@
             color: white;
         }
         .upload-button {
-            background: #007bff; /* Blue button */
+            background: #007bff;
         }
         .return-button {
-            background: #f44336; /* Red button */
+            background: #f44336;
         }
         .export-button {
-            background: #28a745; /* Green button */
+            background: #28a745;
         }
         .job-info-table table {
             font-size: 14px;
@@ -155,7 +155,7 @@
         .stats-card {
             flex: 1;
             min-width: 300px;
-            grid-column: 1 / -1;  /* Make it take full width */
+            grid-column: 1 / -1;
         }
         .plot-grid {
             margin-top: 20px;
@@ -245,6 +245,51 @@
                         Update Schedule
                     </button>
                 </form>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">Add New Job</h4>
+                    <table style="width: 100%; margin-bottom: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Release Time</th>
+                                <th>Deadline</th>
+                                <th>Weight</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <input type="number"
+                                           id="newReleaseTime"
+                                           min="0"
+                                           class="editable-input"
+                                           style="width: 90%;">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           id="newDeadline"
+                                           min="0"
+                                           class="editable-input"
+                                           style="width: 90%;">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           id="newWeight"
+                                           min="1"
+                                           class="editable-input"
+                                           style="width: 90%;">
+                                </td>
+                                <td>
+                                    <button onclick="addNewJob()"
+                                            class="button submit-button"
+                                            style="margin: 0; padding: 4px 12px; font-size: 14px;">
+                                        Add Job
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <style>
@@ -442,6 +487,60 @@
             form.submit();
             document.body.removeChild(form);
         });
+    </script>
+    <script>
+    function addNewJob() {
+        // Get the new job values
+        const releaseTime = document.getElementById('newReleaseTime').value;
+        const deadline = document.getElementById('newDeadline').value;
+        const weight = document.getElementById('newWeight').value;
+
+        // Validate inputs
+        if (!releaseTime || !deadline || !weight) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        // Get the table body
+        const tbody = document.querySelector('#jobInfoForm table tbody');
+        const newJobId = tbody.children.length;
+
+        // Create new row
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${newJobId}</td>
+            <td>
+                <input type="number"
+                       name="release_time_${newJobId}"
+                       value="${releaseTime}"
+                       min="0"
+                       class="editable-input">
+            </td>
+            <td>
+                <input type="number"
+                       name="due_date_${newJobId}"
+                       value="${deadline}"
+                       min="0"
+                       class="editable-input">
+            </td>
+            <td>
+                <input type="number"
+                       name="weight_${newJobId}"
+                       value="${weight}"
+                       min="1"
+                       class="editable-input">
+            </td>
+            <td>0</td>
+        `;
+
+        // Add the new row
+        tbody.appendChild(newRow);
+
+        // Clear input fields
+        document.getElementById('newReleaseTime').value = '';
+        document.getElementById('newDeadline').value = '';
+        document.getElementById('newWeight').value = '';
+    }
     </script>
 </body>
 </html>

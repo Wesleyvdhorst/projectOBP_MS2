@@ -15,7 +15,7 @@ def generate_data_single_sheet(jobs_count, machines_count, seed=43):
     weights = {j: random.randint(1, 6) for j in jobs}
     processing_times = {(j, m): random.randint(2, 6) for j in jobs for m in machines}
 
-    # Prepare data for a single DataFrame
+    # Prepare data for a single dataFrame
     combined_data = []
     for job in jobs:
         for machine in machines:
