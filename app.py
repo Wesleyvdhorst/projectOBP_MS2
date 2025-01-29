@@ -13,7 +13,7 @@ import openai
 app = Flask(__name__)
 app.secret_key = '123456789'  # Add this line after Flask initialization
 
-openai.api_key = "YOUR_API_KEY"
+openai.api_key = "YOUR_API"
 
 REQUIRED_COLUMNS = ['Job', 'Machine', 'Processing Time', 'Release Time', 'Due Date', 'Weight']
 
@@ -305,14 +305,30 @@ def update_schedule():
         img_buf, stats, plots, error = run_scheduler(df)
         if error:
             return render_template('dashboard.html',
-                                   stats={
-                                       'release_times': release_times,
-                                       'due_dates': due_dates,
-                                       'weights': weights,
-                                       'completion_times': {j: 0 for j in range(num_jobs)},
-                                       'num_machines': num_machines
-                                   },
-                                   error=f"Scheduling error: {error}")
+                                stats={
+                                    'release_times': release_times,
+                                    'due_dates': due_dates,
+                                    'weights': weights,
+                                    'completion_times': {j: 0 for j in range(num_jobs)},
+                                    'num_machines': num_machines
+                                },
+                                error=f"Scheduling error: {error}")
+
+        # Convert stats for JSON serialization
+        converted_stats = convert_stats_for_json(stats)
+
+        # Generate AI comments
+        ai_comments = generate_ai_comments(converted_stats)
+
+        # Convert image buffer to base64
+        img_base64 = base64.b64encode(img_buf.getvalue()).decode('utf-8')
+
+        return render_template('dashboard.html',
+                            stats=converted_stats,
+                            img_buf=img_base64,
+                            plots=plots,
+                            ai_comments=ai_comments)  # Ensure AI comments are passed here
+
 
         # Convert stats for JSON serialization
         converted_stats = convert_stats_for_json(stats)
