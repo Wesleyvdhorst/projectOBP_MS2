@@ -26,6 +26,7 @@
         h1 {
             margin-bottom: 20px;
         }
+        /* Buttons Styling */
         .button {
             display: block;
             width: 80%;
@@ -44,15 +45,52 @@
         .generate-button {
             background: #28a745; /* Green button */
         }
+
+        /* Warning Box Styling */
+        .warning-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .warning {
+            background: #ffeb3b; /* Light yellow */
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 48%; /* Adjusted width for side-by-side display */
+            text-align: left;
+        }
+        .warning a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .warning a:hover {
+            text-decoration: underline;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Machine Scheduling Optimizer</h1>
+
         <form action="/upload_or_generate" method="POST">
             <button type="submit" name="choice" value="upload" class="button upload-button">Upload Excel File</button>
             <button type="submit" name="choice" value="generate" class="button generate-button">Generate Random Data</button>
         </form>
+
+        <!-- Warning Box Section (Next to Buttons) -->
+        <div class="warning-container">
+            <div class="warning">
+                <strong>Important:</strong> The online version supports a max of <strong>47 machine-job combinations</strong> (i.e., <em>machines × jobs ≤ 47</em>). For larger datasets, run the app locally on <a href="https://github.com/Wesleyvdhorst/projectOBP_MS2/tree/main" target="_blank">GitHub</a>.
+            </div>
+            <div class="warning">
+                <strong>Important:</strong> The solver is set to run for <strong>30 seconds</strong> max. For more time or accurate results, download and adjust the time limit locally via <a href="https://github.com/Wesleyvdhorst/projectOBP_MS2/tree/main" target="_blank">GitHub</a>.
+            </div>
+        </div>
     </div>
 </body>
 </html>

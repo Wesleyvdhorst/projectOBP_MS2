@@ -53,6 +53,43 @@
         .back-button {
             background: #007bff;
         }
+
+        /* Expected Computing Time Styles */
+        .computing-times {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        .computing-times h3 {
+            margin-bottom: 15px;
+            color: #007bff;
+            font-size: 22px;
+        }
+        .computing-times p {
+            font-size: 16px;
+            color: #555;
+        }
+        .computing-times ul {
+            list-style: none;
+            padding: 0;
+            font-size: 16px;
+            color: #555;
+        }
+        .computing-times li {
+            margin: 8px 0;
+            padding-left: 18px;
+            position: relative;
+        }
+        .computing-times li::before {
+            content: '➤';
+            position: absolute;
+            left: 0;
+            color: #007bff;
+        }
+
     </style>
 </head>
 <body>
@@ -64,6 +101,19 @@
             <button type="submit" class="button submit-button">Generate</button>
             <a href="/" class="button back-button">Back to Landing Page</a>
         </form>
+
+        <!-- Expected Computing Times Section -->
+        <div class="computing-times">
+            <h3>Expected Computing Times</h3>
+            <p>Here are some general expectations for computation times based on the number of jobs:</p>
+            <ul>
+                <li><strong>5-8 jobs:</strong> ~0.02 to 0.24 seconds</li>
+                <li><strong>9-12 jobs:</strong> ~0.2 to 30 seconds</li>
+                <li><strong>13+ jobs:</strong> ~30 seconds (solution may not be fully optimized but adheres to all constraints)</li>
+            </ul>
+            <p><strong>Note:</strong> These are estimated times and can vary depending on system performance and complexity.</p>
+        </div>
+
     </div>
 </body>
 </html>
