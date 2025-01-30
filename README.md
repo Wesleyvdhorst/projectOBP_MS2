@@ -57,7 +57,7 @@ To upload an Excel file, ensure it contains the following columns:
 - **Due Date**: Deadline for the job.
 - **Weight**: Weight assigned to the job for prioritization.
 
-For data generation, you can specify the number of jobs and machines in the application interface.
+For data generation, you can specify the number of jobs and machines in the application interface. Use datagen.py to create the excel in the right format. If you want to input an own excel file, make sure that it follows the same layout as the two example excel files in the GitHub. 
 
 ---
 
