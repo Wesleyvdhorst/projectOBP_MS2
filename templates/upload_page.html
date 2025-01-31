@@ -106,6 +106,37 @@
             color: #007bff;
         }
 
+        /* Example Table Styles */
+        .example-table {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .example-table h3 {
+            color: #007bff;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: #007bff;
+            color: white;
+        }
+        td {
+            background: #f9f9f9;
+        }
+
     </style>
     <script>
         function displayFileName(input) {
@@ -134,6 +165,93 @@
                 <li><strong>13+ jobs:</strong> ~30 seconds (solution may not be fully optimized but adheres to all constraints)</li>
             </ul>
             <p><strong>Note:</strong> These are estimated times and can vary depending on system performance and complexity.</p>
+        </div>
+
+        <!-- Example Excel Format -->
+        <div class="example-table">
+            <h3>Example of Excel File Format</h3>
+            <table>
+                <tr>
+                    <th>Job</th>
+                    <th>Machine</th>
+                    <th>Release Time</th>
+                    <th>Due Date</th>
+                    <th>Weight</th>
+                    <th>Processing Time</th>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td>1</td>
+                    <td>6</td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td>1</td>
+                    <td>6</td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td>1</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td>17</td>
+                    <td>1</td>
+                    <td>6</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>17</td>
+                    <td>1</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>4</td>
+                    <td>17</td>
+                    <td>1</td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>13</td>
+                    <td>4</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>13</td>
+                    <td>4</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>13</td>
+                    <td>4</td>
+                    <td>6</td>
+                </tr>
+            </table>
         </div>
 
         <a href="{{ url_for('landing_page') }}" class="button back-button">Back to Landing Page</a>
